@@ -62,6 +62,7 @@ Set at least:
 GROQ_API_KEY=your_groq_key
 GROQ_EDITOR_API_KEY=your_second_groq_key_or_leave_empty_to_reuse_main_key
 SHASTRA_DB_PATH=/app/data/shastra_ai.sqlite3
+FRONTEND_PORT=8080
 ```
 
 Then run:
@@ -77,7 +78,9 @@ The Docker setup runs:
 - `shastra_data`: Docker volume for SQLite chat history.
 - `shastra_generated_projects`: Docker volume for generated project files.
 
-For EC2, open inbound HTTP port `80` in the security group. Add HTTPS later with an external reverse proxy or by extending the Nginx config with Certbot.
+For local Docker, open `http://localhost:8080`.
+
+For EC2, set `FRONTEND_PORT=80` in `.env` and open inbound HTTP port `80` in the security group. Add HTTPS later with an external reverse proxy or by extending the Nginx config with Certbot.
 
 ### Example Prompts
 
