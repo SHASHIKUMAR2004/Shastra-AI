@@ -8,11 +8,11 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from langchain.globals import set_debug, set_verbose
-from langchain_groq import ChatGroq
 from langgraph.constants import END
 from langgraph.graph import StateGraph
 from pydantic import BaseModel, Field
 
+from agent.groq_fallback import GroqFallbackChat, make_groq_llm
 from agent.prompts import (
     architect_prompt,
     coder_system_prompt,
@@ -56,11 +56,11 @@ def _env_float(name: str, default: float) -> float:
         return default
 
 
-def make_llm(model_env_name: str) -> ChatGroq:
-    model = os.getenv(model_env_name) or os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
-
-    return ChatGroq(
-        model=model,
+def make_llm(model_env_name: str) -> GroqFallbackChat:
+    fallback_env_name = model_env_name.replace("_MODEL", "_MODEL_FALLBACKS")
+    return make_groq_llm(
+        model_env_name=model_env_name,
+        fallback_env_name=fallback_env_name,
         temperature=_env_float("GROQ_TEMPERATURE", 0.1),
         max_tokens=_env_int("GROQ_MAX_TOKENS", 4096),
     )
@@ -158,7 +158,7 @@ def _parse_generated_file_markers(text: str, default_path: str) -> GeneratedFile
     return GeneratedFile(path=path or default_path, content=content)
 
 
-def _invoke_json_model(llm: ChatGroq, model: type[BaseModel], prompt: str):
+def _invoke_json_model(llm: GroqFallbackChat, model: type[BaseModel], prompt: str):
     try:
         return invoke_with_retry(
             lambda: llm.with_structured_output(model, method="json_mode").invoke(prompt)

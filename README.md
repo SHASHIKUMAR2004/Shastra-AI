@@ -44,7 +44,12 @@ python main.py
 - `GROQ_API_KEY` is required.
 - `GROQ_MODEL` is optional and defaults to `openai/gpt-oss-20b`.
 - You can override individual roles with `GROQ_PLANNER_MODEL`, `GROQ_ARCHITECT_MODEL`, `GROQ_CODER_MODEL`, and `GROQ_DEBUGGER_MODEL`.
+- `GROQ_MODEL_FALLBACKS` is a comma-separated fallback chain. When a Groq model hits a retryable rate/token/model error, Shastra AI automatically tries the next model instead of failing immediately.
+- `GROQ_AUTO_MODEL_FALLBACKS=true` appends chat-capable candidates from Groq's live `/models` API after your configured fallback chain.
+- Role-specific fallback chains are supported with `GROQ_PLANNER_MODEL_FALLBACKS`, `GROQ_ARCHITECT_MODEL_FALLBACKS`, `GROQ_CODER_MODEL_FALLBACKS`, and `GROQ_DEBUGGER_MODEL_FALLBACKS`. Leave them empty to reuse `GROQ_MODEL_FALLBACKS`.
 - Project edit/chat mode can use a separate key/model with `GROQ_EDITOR_API_KEY` and `GROQ_EDITOR_MODEL`. If `GROQ_EDITOR_API_KEY` is empty, it falls back to `GROQ_API_KEY`.
+- Project edit/chat mode also supports `GROQ_EDITOR_MODEL_FALLBACKS`.
+- You can inspect the full live Groq model list plus the resolved generation/editor fallback chains at `GET /api/models/groq`.
 - Project chat history is stored in SQLite. `SHASTRA_DB_PATH` is optional and defaults to `./shastra_ai.sqlite3`; set it to a persistent mounted path when hosting in the cloud.
 - `LANGCHAIN_DEBUG=true` enables verbose LangChain debug output.
 
@@ -60,6 +65,8 @@ Set at least:
 
 ```env
 GROQ_API_KEY=your_groq_key
+GROQ_MODEL_FALLBACKS=openai/gpt-oss-120b,llama-3.3-70b-versatile,llama-3.1-8b-instant,meta-llama/llama-4-maverick-17b-128e-instruct,meta-llama/llama-4-scout-17b-16e-instruct,qwen/qwen3-32b,deepseek-r1-distill-llama-70b,gemma2-9b-it
+GROQ_AUTO_MODEL_FALLBACKS=true
 GROQ_EDITOR_API_KEY=your_second_groq_key_or_leave_empty_to_reuse_main_key
 SHASTRA_DB_PATH=/app/data/shastra_ai.sqlite3
 FRONTEND_PORT=8080

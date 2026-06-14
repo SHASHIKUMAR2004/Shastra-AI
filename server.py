@@ -17,9 +17,9 @@ from uuid import uuid4
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from langchain_groq import ChatGroq
-from pydantic import BaseModel, Field, SecretStr
+from pydantic import BaseModel, Field
 
+from agent.groq_fallback import available_groq_models, make_groq_llm, resolve_groq_models
 from agent.graph import _check_html_references, _extract_json
 from agent.graph import agent
 
@@ -117,6 +117,12 @@ class ProjectChatResponse(BaseModel):
     history: list[ProjectChatMessage]
     changed_files: list[str] = Field(default_factory=list)
     validation: ProjectValidationResult
+
+
+class GroqModelsResponse(BaseModel):
+    available_models: list[str]
+    generation_models: list[str]
+    editor_models: list[str]
 
 
 app = FastAPI(title="Shastra AI API", version="0.1.0")
@@ -328,18 +334,14 @@ def _build_generation_prompt(prompt: str, attachments: list[AttachmentInput]) ->
     return "".join(chunks)
 
 
-def _make_editor_llm() -> ChatGroq:
-    api_key = os.getenv("GROQ_EDITOR_API_KEY") or os.getenv("GROQ_API_KEY")
-    model = os.getenv("GROQ_EDITOR_MODEL") or os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
-
-    kwargs: dict[str, Any] = {
-        "model": model,
-        "temperature": _env_float("GROQ_EDITOR_TEMPERATURE", _env_float("GROQ_TEMPERATURE", 0.1)),
-        "max_tokens": _env_int("GROQ_EDITOR_MAX_TOKENS", _env_int("GROQ_MAX_TOKENS", 4096)),
-    }
-    if api_key:
-        kwargs["api_key"] = SecretStr(api_key)
-    return ChatGroq(**kwargs)
+def _make_editor_llm():
+    return make_groq_llm(
+        model_env_name="GROQ_EDITOR_MODEL",
+        fallback_env_name="GROQ_EDITOR_MODEL_FALLBACKS",
+        api_key_env_names=("GROQ_EDITOR_API_KEY", "GROQ_API_KEY"),
+        temperature=_env_float("GROQ_EDITOR_TEMPERATURE", _env_float("GROQ_TEMPERATURE", 0.1)),
+        max_tokens=_env_int("GROQ_EDITOR_MAX_TOKENS", _env_int("GROQ_MAX_TOKENS", 4096)),
+    )
 
 
 def _message_text(message: Any) -> str:
@@ -580,6 +582,19 @@ def _run_generation(job_id: str, prompt: str, recursion_limit: int) -> None:
 @app.get("/api/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/api/models/groq", response_model=GroqModelsResponse)
+def groq_models() -> GroqModelsResponse:
+    return GroqModelsResponse(
+        available_models=available_groq_models(),
+        generation_models=resolve_groq_models(model_env_name="GROQ_MODEL"),
+        editor_models=resolve_groq_models(
+            model_env_name="GROQ_EDITOR_MODEL",
+            fallback_env_name="GROQ_EDITOR_MODEL_FALLBACKS",
+            api_key_env_names=("GROQ_EDITOR_API_KEY", "GROQ_API_KEY"),
+        ),
+    )
 
 
 @app.post("/api/generations", response_model=GenerateResponse)
