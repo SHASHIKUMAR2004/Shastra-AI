@@ -1,0 +1,37 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+.env
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Logs
+*.log
+*.tsbuildinfo
+
+# Runtime databases
+*.sqlite
+*.sqlite3
+*.db
+
+# Runtime/generated project outputs
+generated_projects/
+
+# Frontend dependencies
+node_modules/
+frontend/.vite/
+
+# IDEs and editors
+.vscode/
+.idea/
+
+# System files
+.DS_Store
