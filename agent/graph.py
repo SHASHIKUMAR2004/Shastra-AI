@@ -250,10 +250,10 @@ def planner_agent(state: dict) -> dict:
     """
     user_prompt = state["user_prompt"]
 
-    resp = invoke_with_retry(
-        lambda: planner_llm.with_structured_output(Plan, method="json_mode").invoke(
-            planner_prompt(user_prompt, Plan.model_json_schema())
-        )
+    resp = _invoke_json_model(
+        planner_llm,
+        Plan,
+        planner_prompt(user_prompt, Plan.model_json_schema()),
     )
 
     if resp is None:
@@ -277,13 +277,13 @@ def architect_agent(state: dict) -> dict:
     """
     plan: Plan = state["plan"]
 
-    resp = invoke_with_retry(
-        lambda: architect_llm.with_structured_output(TaskPlan, method="json_mode").invoke(
-            architect_prompt(
-                plan=plan.model_dump_json(),
-                output_schema=TaskPlan.model_json_schema(),
-            )
-        )
+    resp = _invoke_json_model(
+        architect_llm,
+        TaskPlan,
+        architect_prompt(
+            plan=plan.model_dump_json(),
+            output_schema=TaskPlan.model_json_schema(),
+        ),
     )
 
     if resp is None:
