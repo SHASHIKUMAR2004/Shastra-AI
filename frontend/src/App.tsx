@@ -86,6 +86,14 @@ function getInitialTheme(): Theme {
   return "dark";
 }
 
+function createClientId() {
+  if (globalThis.crypto?.randomUUID) {
+    return globalThis.crypto.randomUUID();
+  }
+
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 function App() {
   const [apiOnline, setApiOnline] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -197,7 +205,7 @@ function App() {
 
       if (selectedProject) {
         const optimisticMessage: ProjectChatMessage = {
-          id: crypto.randomUUID(),
+          id: createClientId(),
           role: "user",
           content: promptToSend,
           created_at: new Date().toISOString(),
@@ -238,7 +246,7 @@ function App() {
         const contentText = isTextLike ? (await file.text()).slice(0, 30000) : undefined;
 
         return {
-          id: crypto.randomUUID(),
+          id: createClientId(),
           file,
           name: file.name,
           type: file.type || "application/octet-stream",
