@@ -6,8 +6,13 @@ import type {
   ProjectSummary,
 } from "./types";
 
+const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ?? `${window.location.protocol}//${window.location.hostname}:8000`;
+  configuredApiBaseUrl !== undefined
+    ? configuredApiBaseUrl.replace(/\/$/, "")
+    : import.meta.env.PROD
+      ? ""
+      : `${window.location.protocol}//${window.location.hostname}:8000`;
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {

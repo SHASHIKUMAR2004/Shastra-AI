@@ -48,6 +48,23 @@ python main.py
 - Project chat history is stored in SQLite. `SHASTRA_DB_PATH` is optional and defaults to `./shastra_ai.sqlite3`; set it to a persistent mounted path when hosting in the cloud.
 - `LANGCHAIN_DEBUG=true` enables verbose LangChain debug output.
 
+### Docker Deployment
+
+Create a `.env` file from `.sample_env`, then run:
+
+```bash
+docker compose up -d --build
+```
+
+The Docker setup runs:
+
+- `backend`: FastAPI on port `8000` inside the Docker network.
+- `frontend`: Nginx on public port `80`, serving the React build and proxying `/api` to the backend.
+- `shastra_data`: Docker volume for SQLite chat history.
+- `shastra_generated_projects`: Docker volume for generated project files.
+
+For EC2, open inbound HTTP port `80` in the security group. Add HTTPS later with an external reverse proxy or by extending the Nginx config with Certbot.
+
 ### Example Prompts
 
 - Create a to-do list application using HTML, CSS, and JavaScript.

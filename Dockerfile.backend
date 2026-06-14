@@ -1,0 +1,26 @@
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    UV_PROJECT_ENVIRONMENT=/app/.venv \
+    SHASTRA_DB_PATH=/app/data/shastra_ai.sqlite3
+
+WORKDIR /app
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --no-cache-dir uv
+
+COPY pyproject.toml uv.lock .python-version README.md ./
+RUN uv sync --frozen --no-dev
+
+COPY agent ./agent
+COPY resources ./resources
+COPY main.py server.py ./
+
+RUN mkdir -p /app/generated_projects /app/data
+
+EXPOSE 8000
+
+CMD ["uv", "run", "uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]
