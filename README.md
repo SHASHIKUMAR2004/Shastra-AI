@@ -50,7 +50,21 @@ python main.py
 
 ### Docker Deployment
 
-Create a `.env` file from `.sample_env`, then run:
+Create a `.env` file from `.sample_env` before starting Docker:
+
+```bash
+cp .sample_env .env
+```
+
+Set at least:
+
+```env
+GROQ_API_KEY=your_groq_key
+GROQ_EDITOR_API_KEY=your_second_groq_key_or_leave_empty_to_reuse_main_key
+SHASTRA_DB_PATH=/app/data/shastra_ai.sqlite3
+```
+
+Then run:
 
 ```bash
 docker compose up -d --build
